@@ -9,8 +9,8 @@ from ez_setup import use_setuptools
 use_setuptools()
 from setuptools import setup, find_packages
 
-setup(name              = 'Myway_ILI9486',
-      version           = '1.0.0',
+setup(name              = 'Python_ILI9486',
+      version           = '1.1.0',
       author            = 'Liqun Hu',
       author_email      = 'huliquns@126.com',
       description       = 'Library to control an ILI9486 TFT LCD display.',

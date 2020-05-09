@@ -19,11 +19,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-import Image
-import ImageDraw
-import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
-import Myway_ILI9486 as TFT
+import Python_ILI9486 as TFT
 import Adafruit_GPIO as GPIO
 import Adafruit_GPIO.SPI as SPI
 
@@ -33,12 +31,6 @@ DC = 24
 RST = 25
 SPI_PORT = 0
 SPI_DEVICE = 0
-
-# BeagleBone Black configuration.
-# DC = 'P9_15'
-# RST = 'P9_12'
-# SPI_PORT = 1
-# SPI_DEVICE = 0
 
 # Create TFT LCD display class.
 disp = TFT.ILI9486(DC, rst=RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=64000000))
@@ -97,10 +89,9 @@ def draw_rotated_text(image, text, position, angle, font, fill=(255,255,255)):
 	image.paste(rotated, position, rotated)
 
 # Write two lines of white text on the buffer, rotated 90 degrees counter clockwise.
-draw_rotated_text(disp.buffer, u'春节快乐', (50, 40), 90, font, fill=(255,255,255))
-draw_rotated_text(disp.buffer, 'Happy Lunar New Year !', (160, 40), 90, fontEn, fill=(255,255,255))
-draw_rotated_text(disp.buffer, u'--by Myway', (200, 40), 90, fontN, fill=(255,255,255))
-draw_rotated_text(disp.buffer, u'2016-02-07', (230, 40), 90, fontN, fill=(255,255,255))
+draw_rotated_text(disp.buffer, 'Happy New Year!', (160, 40), 90, fontEn, fill=(255,255,255))
+draw_rotated_text(disp.buffer, u'--by Ustropo', (200, 40), 90, fontN, fill=(255,255,255))
+draw_rotated_text(disp.buffer, u'2020-05-08', (230, 40), 90, fontN, fill=(255,255,255))
 
 # Write buffer to display hardware, must be called to make things visible on the
 # display!

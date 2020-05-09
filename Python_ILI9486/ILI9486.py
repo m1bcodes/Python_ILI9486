@@ -22,8 +22,7 @@ import numbers
 import time
 import numpy as np
 
-import Image
-import ImageDraw
+from PIL import Image, ImageDraw
 
 import Adafruit_GPIO as GPIO
 import Adafruit_GPIO.SPI as SPI
