@@ -123,6 +123,10 @@ def image_to_data(image):
 #            yield g  
 #            yield b 
 
+# Define a function to hard code that we are using a raspberry pi
+def get_platform_gpio_for_pi(**keywords):
+    import RPi.GPIO
+    return GPIO.RPiGPIOAdapter(RPi.GPIO, **keywords)
 
 class ILI9486(object):
     """Representation of an ILI9486 TFT LCD."""
@@ -141,7 +145,8 @@ class ILI9486(object):
         self.width = width
         self.height = height
         if self._gpio is None:
-            self._gpio = GPIO.get_platform_gpio()
+            #self._gpio = GPIO.get_platform_gpio()
+            self._gpio = get_platform_gpio_for_pi()
         # Set DC as output.
         self._gpio.setup(dc, GPIO.OUT)
         # Setup reset as output (if provided).
