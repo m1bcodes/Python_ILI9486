@@ -32,8 +32,9 @@ pip install wheel
 pip install adafruit-gpio
 pip install pillow
 pip install numpy
-pip install rpi.gpio
+pip install rpi.gpio --pre
 ````
+Note: pip failed with an error compiling rpi.gpio, because rpio.gpio was not compatible with python 3.9. So we used a pre-release here.
 
 Install the library by downloading with the download link on the right, unzipping the archive, navigating inside the library's directory and executing:
 
@@ -48,7 +49,7 @@ See example of usage in the examples folder.
 SPI access must be done by a root user. So, if a Permission Error occurs, run the script as sudo:
 
 ````
-sudo .venv/bin/python image.py
+.venv/bin/python image.py
 ````
 
 
