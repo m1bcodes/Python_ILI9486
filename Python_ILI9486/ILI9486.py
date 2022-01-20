@@ -183,6 +183,9 @@ class ILI9486(object):
         """Write a byte or array of bytes to the display as display data."""
         self.send(data, True)
 
+    def swreset(self):
+        self.command(ILI9486_SWRESET)
+
     def reset(self):
         """Reset the display, if reset pin is connected."""
         if self._rst is not None:
@@ -196,8 +199,12 @@ class ILI9486(object):
     def _init(self):
         # Initialize the display.  Broken out as a separate function so it can
         # be overridden by other displays in the future.
+
+        self.swreset()
+
         self.command(0xB0)
         self.data(0x00)
+
         self.command(0x11)
         time.sleep(0.020)
     
@@ -221,59 +228,18 @@ class ILI9486(object):
         self.data(0x00)
         self.data(0x00)
         
-        self.command(0xE0)
-        self.data(0x0F)
-        self.data(0x1F)
-        self.data(0x1C)
-        self.data(0x0C)
-        self.data(0x0F)
-        self.data(0x08)
-        self.data(0x48)
-        self.data(0x98)
-        self.data(0x37)
-        self.data(0x0A)
-        self.data(0x13)
-        self.data(0x04)
-        self.data(0x11)
-        self.data(0x0D)
-        self.data(0x00)
+        gamma = [0x0F, 0x1F, 0x1C, 0x0C, 0x0F, 0x08, 0x48, 0x98, 0x37, 0x0A, 0x13, 0x04, 0x11, 0x0D, 0x00]
 
-        self.command(0xE1)
-        self.data(0x0F)
-        self.data(0x32)
-        self.data(0x2E)
-        self.data(0x0B)
-        self.data(0x0D)
-        self.data(0x05)
-        self.data(0x47)
-        self.data(0x75)
-        self.data(0x37)
-        self.data(0x06)
-        self.data(0x10)
-        self.data(0x03)
-        self.data(0x24)
-        self.data(0x20)
-        self.data(0x00)
-    
-        self.command(0xE2)
-        self.data(0x0F)
-        self.data(0x32)
-        self.data(0x2E)
-        self.data(0x0B)
-        self.data(0x0D)
-        self.data(0x05)
-        self.data(0x47)
-        self.data(0x75)
-        self.data(0x37)
-        self.data(0x06)
-        self.data(0x10)
-        self.data(0x03)
-        self.data(0x24)
-        self.data(0x20)
-        self.data(0x00)
+        # gamma = [128] * 15
+        self.set_pos_gamma(gamma)
+        self.set_neg_gamma(gamma)
+        
+        # gamma = gamma + [0x00]
+        # gamma=[255] * 8 + [0] * 8
+        # self.set_dig_gamma(gamma)     # seems to have no effect
             
-        self.command(0x36)
-        self.data(0x88) #change the direct
+        self.command(0x36)              # memory access control 
+        self.data(0x88)                 # change coordinate system orientation etc. (NOte: No change on color scheme)
 
         self.command(0x11)
         self.command(0x29)
@@ -285,6 +251,27 @@ class ILI9486(object):
         self.reset()
         self._init()    
     
+    def set_pos_gamma(self, values):
+        if len(values) != 15:
+            raise Exception("Argument values must have 15 elements")
+        self.command(ILI9486_GMCTRP1)
+        for v in values:
+            self.data(v)
+
+    def set_neg_gamma(self, values):
+        if len(values) != 15:
+            raise Exception("Argument values must have 15 elements")
+        self.command(ILI9486_GMCTRN1)
+        for v in values:
+            self.data(v)
+
+    def set_dig_gamma(self, values):
+        if len(values) != 16:
+            raise Exception("Argument values must have 15 elements")
+        self.command(0xE2)
+        for v in values:
+            self.data(v)
+
     def set_window(self, x0=0, y0=0, x1=None, y1=None):
         """Set the pixel address window for proceeding drawing commands. x0 and
         x1 should define the minimum and maximum x pixel bounds.  y0 and y1 
@@ -308,7 +295,7 @@ class ILI9486(object):
         self.data(y1 & 0xFF)                    # YEND
         self.command(0x2C)        # write to RAM
 
-    def display(self, image=None):
+    def display(self, image=None, rect=None):
         """Write the display buffer or provided image to the hardware.  If no
         image parameter is provided the display buffer will be written to the
         hardware.  If an image is provided, it should be RGB format and the
@@ -317,8 +304,13 @@ class ILI9486(object):
         # By default write the internal buffer to the display.
         if image is None:
             image = self.buffer
-        # Set address bounds to entire display.
-        self.set_window()
+            # Set address bounds to entire display.
+            self.set_window()
+        else:
+            if rect is None:
+                raise Exception("Expecting rect parameter")
+            self.set_window(rect[0], rect[1], rect[2], rect[3])
+
         # Convert image to array of 16bit 565 RGB data bytes.
         # Unfortunate that this copy has to occur, but the SPI byte writing
         # function needs to take an array of bytes and PIL doesn't natively
