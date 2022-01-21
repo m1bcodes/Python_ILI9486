@@ -21,6 +21,7 @@
 import numbers
 import time
 import numpy as np
+from enum import Enum
 
 from PIL import Image, ImageDraw
 
@@ -96,6 +97,10 @@ ILI9486_MAGENTA     = 0xF81F
 ILI9486_YELLOW      = 0xFFE0  
 ILI9486_WHITE       = 0xFFFF
 
+UpperLeft           = 0
+UpperRight          = 1
+LowerLeft           = 2
+LowerRight          = 3
 
 def color565(r, g, b):
     """Convert red, green, blue components to a 16-bit 565 RGB value. Components
@@ -122,6 +127,7 @@ def image_to_data(image):
 #            yield r 
 #            yield g  
 #            yield b 
+#
 
 # Define a function to hard code that we are using a raspberry pi
 def get_platform_gpio_for_pi(**keywords):
@@ -131,7 +137,7 @@ def get_platform_gpio_for_pi(**keywords):
 class ILI9486(object):
     """Representation of an ILI9486 TFT LCD."""
 
-    def __init__(self, dc, spi, rst=None, gpio=None, width=ILI9486_TFTWIDTH,
+    def __init__(self, dc, spi, rst=None, gpio=None, origin = UpperLeft, width=ILI9486_TFTWIDTH,
         height=ILI9486_TFTHEIGHT):
         """Create an instance of the display using SPI communication.  Must
         provide the GPIO pin number for the D/C pin and the SPI driver.  Can
@@ -144,6 +150,8 @@ class ILI9486(object):
         self._gpio = gpio
         self.width = width
         self.height = height
+        self.origin = origin
+
         if self._gpio is None:
             #self._gpio = GPIO.get_platform_gpio()
             self._gpio = get_platform_gpio_for_pi()
@@ -157,7 +165,6 @@ class ILI9486(object):
         spi.set_bit_order(SPI.MSBFIRST)
         spi.set_clock_hz(64000000)
         # Create an image buffer.
-        self.buffer = Image.new('RGB', (width, height))
 
     def send(self, data, is_data=True, chunk_size=4096):
         """Write a byte or array of bytes to the display. Is_data parameter
@@ -239,7 +246,25 @@ class ILI9486(object):
         # self.set_dig_gamma(gamma)     # seems to have no effect
             
         self.command(0x36)              # memory access control 
-        self.data(0x88)                 # change coordinate system orientation etc. (NOte: No change on color scheme)
+        if self.origin==UpperLeft:
+            self.data(0b00101000)
+            self.width,self.height = self.height, self.width
+            pass
+        elif self.origin==UpperRight:
+            self.data(0x88) # b10001000                 # change coordinate system orientation etc. (NOte: No change on color scheme)
+            pass
+        elif self.origin==LowerLeft:
+            self.data(0x48) # b01001000
+            pass
+        elif self.origin==LowerRight:
+            self.data(0xE8) # b11101000
+            self.width,self.height = self.height, self.width
+            pass
+        else:
+            raise Exception("Unknown origin: %1" % self.origin)
+
+        self.buffer = Image.new('RGB', (self.width, self.height))
+
 
         self.command(0x11)
         self.command(0x29)
