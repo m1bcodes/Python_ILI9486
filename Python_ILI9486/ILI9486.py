@@ -209,37 +209,48 @@ class ILI9486(object):
 
         self.swreset()
 
-        self.command(0xB0)
+        self.command(0xB0)  # Interface mode
         self.data(0x00)
 
-        self.command(0x11)
+        self.command(ILI9486_SLPOUT)
         time.sleep(0.020)
     
-        self.command(0x3A)
-        self.data(0x66)
+        self.command(ILI9486_PIXFMT)
+        self.data(0x66)     # set 18bpp
 
-        self.command(0x0C)
-        self.data(0x66)
+        # self.command(ILI9486_RDPIXFMT)
+        # self.data(0x66)
 
-        #self.command(0xB6)
-        #self.data(0x00)
-        #self.data(0x42)
-        #self.data(0x3B)
+        # self.command(ILI9486_DFUNCTR)     # configuration from arduino shield
+        # self.data(0x00)
+        # self.data(0x42)
+        # self.data(0x3B)
 
-        self.command(0xC2)
-        self.data(0x44)
+        # self.command(ILI9486_PWCTR1)
+        # self.data(0x19)
+        # self.data(0x1a)
 
-        self.command(0xC5)
+        # self.command(ILI9486_PWCTR2)
+        # self.data(0x45)
+        # self.data(0x00)
+
+        self.command(ILI9486_PWCTR3)        # power control for normal mode
+        self.data(0x44)                     # 
+
+        self.command(ILI9486_VMCTR1)
         self.data(0x00)
         self.data(0x00)
         self.data(0x00)
         self.data(0x00)
         
-        gamma = [0x0F, 0x1F, 0x1C, 0x0C, 0x0F, 0x08, 0x48, 0x98, 0x37, 0x0A, 0x13, 0x04, 0x11, 0x0D, 0x00]
+        self.command(ILI9486_INVON)     # we need inverion on to have the right colors
 
+        # gamma = [0x0F, 0x1F, 0x1C, 0x0C, 0x0F, 0x08, 0x48, 0x98, 0x37, 0x0A, 0x13, 0x04, 0x11, 0x0D, 0x00]
+        pos_gamma = [0x1f, 0x25,0x22,0x0b,0x06,0x0a,0x4e,0xc6,0x39,0x00,0x00,0x00,0x00,0x00,0x00]
         # gamma = [128] * 15
-        self.set_pos_gamma(gamma)
-        self.set_neg_gamma(gamma)
+        self.set_pos_gamma(pos_gamma)
+        neg_gamma = [0x1f,0x3f,0x3f,0x0f,0x1f,0x0f,0x46,0x49,0x31,0x05,0x09,0x03,0x1c,0x1a,0x00]
+        self.set_neg_gamma(neg_gamma)
         
         # gamma = gamma + [0x00]
         # gamma=[255] * 8 + [0] * 8
@@ -266,8 +277,8 @@ class ILI9486(object):
         self.buffer = Image.new('RGB', (self.width, self.height))
 
 
-        self.command(0x11)
-        self.command(0x29)
+        self.command(ILI9486_SLPOUT)
+        self.command(ILI9486_DISPON)
 
     def begin(self):
         """Initialize the display.  Should be called once before other calls that
